@@ -1,199 +1,448 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="el">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Stoixima Insider</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ο Μηχανισμός των Αντικυθήρων - Προσομοίωση</title>
+  <style>
+    :root {
+      --bg-dark: #0f141c;
+      --bg-card: #18202c;
+      --accent-gold: #d4af37;
+      --accent-bronze: #cd7f32;
+      --text-main: #e2e8f0;
+      --text-muted: #94a3b8;
+      --border: #2a364f;
+    }
 
-<style>
-body{margin:0;font-family:Arial;background:#0f1114;color:#fff}
-header{padding:16px;background:#151619;display:flex;justify-content:space-between;align-items:center}
-.container{max-width:1100px;margin:20px auto;padding:0 16px}
-.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px}
-.card{background:#151619;border-radius:16px;padding:14px}
-.bet-image{width:100%;border-radius:12px;margin-top:10px}
-.blurred{filter:blur(16px)}
-.vip-lock{
-  margin-top:10px;
-  padding:12px;
-  text-align:center;
-  border:1px dashed rgba(255,255,255,.4);
-  border-radius:12px;
-  cursor:pointer;
-  font-weight:700
-}
-.modal{
-  position:fixed;inset:0;
-  background:rgba(0,0,0,.7);
-  display:none;align-items:center;justify-content:center
-}
-.modal-card{
-  background:#151619;
-  padding:20px;
-  border-radius:16px;
-  width:100%;
-  max-width:400px
-}
-input,select{
-  width:100%;
-  padding:10px;
-  margin-bottom:10px;
-  border-radius:8px;
-  border:0
-}
-button{cursor:pointer}
-.admin-btn{
-  position:fixed;
-  right:14px;
-  bottom:14px;
-  border-radius:50%;
-  padding:12px;
-  font-size:18px
-}
-</style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: var(--bg-dark);
+      color: var(--text-main);
+      line-height: 1.6;
+      padding: 20px;
+    }
+
+    .container {
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+
+    header {
+      text-align: center;
+      padding: 20px 0;
+      border-bottom: 2px solid var(--accent-gold);
+      margin-bottom: 30px;
+    }
+
+    header h1 {
+      color: var(--accent-gold);
+      font-size: 2.2rem;
+      margin-bottom: 8px;
+    }
+
+    header p {
+      color: var(--text-muted);
+      font-size: 1.1rem;
+    }
+
+    .main-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 25px;
+    }
+
+    @media (max-width: 850px) {
+      .main-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+    }
+
+    .card h2 {
+      color: var(--accent-gold);
+      font-size: 1.3rem;
+      margin-bottom: 15px;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 8px;
+    }
+
+    /* Simulation Canvas & Controls */
+    .canvas-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    canvas {
+      background: #0a0d12;
+      border-radius: 50%;
+      border: 4px solid var(--accent-bronze);
+      box-shadow: 0 0 20px rgba(212, 175, 55, 0.2);
+    }
+
+    .controls {
+      width: 100%;
+      margin-top: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .slider-group {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .slider-group label {
+      font-weight: bold;
+      min-width: 90px;
+      font-size: 0.9rem;
+    }
+
+    input[type=range] {
+      flex: 1;
+      accent-color: var(--accent-gold);
+    }
+
+    .btn-group {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+    }
+
+    button {
+      background: linear-gradient(135deg, var(--accent-bronze), var(--accent-gold));
+      color: #000;
+      border: none;
+      padding: 10px 18px;
+      font-weight: bold;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: opacity 0.2s;
+    }
+
+    button:hover {
+      opacity: 0.9;
+    }
+
+    /* Display Gauges */
+    .gauge-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .gauge-item {
+      background: rgba(255, 255, 255, 0.03);
+      padding: 12px;
+      border-radius: 8px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-left: 4px solid var(--accent-gold);
+    }
+
+    .gauge-title {
+      font-size: 0.95rem;
+      color: var(--text-muted);
+    }
+
+    .gauge-value {
+      font-size: 1.1rem;
+      font-weight: bold;
+      color: var(--accent-gold);
+    }
+
+    /* Info Sections */
+    .info-section {
+      margin-top: 25px;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 20px;
+    }
+
+    .info-box {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 15px;
+    }
+
+    .info-box h3 {
+      color: var(--accent-gold);
+      font-size: 1.1rem;
+      margin-bottom: 8px;
+    }
+
+    .info-box p {
+      font-size: 0.95rem;
+      color: var(--text-muted);
+    }
+  </style>
 </head>
-
 <body>
 
-<header>
-  <b>Stoixima <span style="color:#e91e63">Insider</span></b>
-  <button id="addBtn" style="display:none">➕ Προσθήκη</button>
-</header>
+  <div class="container">
+    <header>
+      <h1>Ο Μηχανισμός των Αντικυθήρων</h1>
+      <p>Διαδραστική Προσομοίωση Αστρονομικού Ωρολογίου & Αναλογικού Υπολογιστή</p>
+    </header>
 
-<div class="container">
-  <div id="cards" class="grid"></div>
-</div>
+    <div class="main-grid">
+      <!-- Αριστερή Στήλη: Μηχανισμός Canvas & Χειρισμός -->
+      <div class="card canvas-container">
+        <h2>Προσομοίωση Γραναζιών & Λαβής</h2>
+        <canvas id="mechanismCanvas" width="340" height="340"></canvas>
 
-<div id="modal" class="modal">
-  <div class="modal-card">
-    <h3>Νέα Πρόβλεψη</h3>
-    <input id="home" placeholder="Home">
-    <input id="away" placeholder="Away">
-    <input id="league" placeholder="Λίγκα">
-    <input type="file" id="imageInput" accept="image/*">
-    <select id="lockedSel">
-      <option value="locked">Κλειδωμένο</option>
-      <option value="free">Ανοικτό</option>
-    </select>
-    <button id="save">Αποθήκευση</button>
+        <div class="controls">
+          <div class="slider-group">
+            <label for="crankSlider">Χειρολαβή:</label>
+            <input type="range" id="crankSlider" min="0" max="360" value="0">
+          </div>
+
+          <div class="btn-group">
+            <button id="toggleBtn">▶ Αυτόματη Περιστροφή</button>
+            <button id="resetBtn">↺ Επαναφορά</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Δεξιά Στήλη: Αστρονομικοί Δείκτες -->
+      <div class="card">
+        <h2>Αστρονομικές Ενδείξεις</h2>
+        <div class="gauge-list">
+          <div class="gauge-item">
+            <div>
+              <div class="gauge-title">Θέση Ηλίου (Ζωδιακός)</div>
+              <small style="color:#64748b">365 Ημέρες / Έτος</small>
+            </div>
+            <div class="gauge-value" id="sunVal">0° (Κριός)</div>
+          </div>
+
+          <div class="gauge-item">
+            <div>
+              <div class="gauge-title">Φάση Σελήνης</div>
+              <small style="color:#64748b">Σεληνιακός Μήνας (~29.5 ημέρες)</small>
+            </div>
+            <div class="gauge-value" id="moonVal">Νέα Σελήνη</div>
+          </div>
+
+          <div class="gauge-item">
+            <div>
+              <div class="gauge-title">Μετωνικός Κύκλος</div>
+              <small style="color:#64748b">19 Έτη / 235 Μήνες</small>
+            </div>
+            <div class="gauge-value" id="metonicVal">Έτος 1 / 19</div>
+          </div>
+
+          <div class="gauge-item">
+            <div>
+              <div class="gauge-title">Πρόβλεψη Εκλείψεων (Σάρος)</div>
+              <small style="color:#64748b">Κύκλος 223 Μηνών</small>
+            </div>
+            <div class="gauge-value" id="sarosVal">Καμία Έκλειψη</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Ενότητες Πληροφοριών -->
+    <div class="info-section">
+      <div class="info-box">
+        <h3>Τι ήταν στην πραγματικότητα;</h3>
+        <p>Λειτουργούσε σαν αστρονομικό ρολόι. Με την περιστροφή μιας λαβής στο πλάι, κινούσε 30+ ορειχάλκινα γρανάζια για να υπολογίζει τις κινήσεις του Ηλίου, της Σελήνης και των πλανητών.</p>
+      </div>
+
+      <div class="info-box">
+        <h3>Ποιος το έφτιαξε;</h3>
+        <p>Κατασκευάστηκε τον 2ο αιώνα π.Χ., πιθανότατα στη Ρόδο ή τις Κορινθιακές αποικίες. Πολλοί επιστήμονες συνδέουν το σχεδιασμό του με τη σχολή του Αρχιμήδη ή τον Ίππαρχο.</p>
+      </div>
+
+      <div class="info-box">
+        <h3>Από τι αποτελείται;</h3>
+        <p>Αποτελούνταν από μια ξύλινη θήκη με χάλκινα καντράν μπρος-πίσω, επιγραφές οδηγιών και ένα πολύπλοκο σύστημα διαφορικών γραναζιών στο εσωτερικό.</p>
+      </div>
+    </div>
   </div>
-</div>
 
-<button id="adminTrigger" class="admin-btn">🛠️</button>
+  <script>
+    const canvas = document.getElementById('mechanismCanvas');
+    const ctx = canvas.getContext('2d');
+    const crankSlider = document.getElementById('crankSlider');
+    const toggleBtn = document.getElementById('toggleBtn');
+    const resetBtn = document.getElementById('resetBtn');
 
-<script>
-const STORAGE="si_data_final_v1";
-const ADMIN_HASH="240be518fabd2724ddb6f04eeb1da5967448d7e831c08c8fa822809f74c720a9";
+    // Gauges elements
+    const sunVal = document.getElementById('sunVal');
+    const moonVal = document.getElementById('moonVal');
+    const metonicVal = document.getElementById('metonicVal');
+    const sarosVal = document.getElementById('sarosVal');
 
-/* TELEGRAM */
-const TG_BOT="8503882712:AAG_sF4-LhoeYyL1mF4VKW7UtyiBv6Gk-WA";
-const TG_CHAT="5734258452";
+    let angle = 0;
+    let isRunning = false;
+    let animId = null;
 
-/* STATE */
-let data=JSON.parse(localStorage.getItem(STORAGE)||"[]");
-let isAdmin=localStorage.getItem("si_admin")==="1";
+    const zodiacSigns = [
+      "Κριός", "Ταύρος", "Δίδυμοι", "Καρκίνος", 
+      "Λέων", "Παρθένος", "Ζυγός", "Σκορπιός", 
+      "Τοξότης", "Αιγόκερως", "Υδροχόος", "Ιχθύες"
+    ];
 
-/* ELEMENTS */
-const cards=document.getElementById("cards");
-const modal=document.getElementById("modal");
-const addBtn=document.getElementById("addBtn");
+    // Ροδάνι / Γρανάζι σχεδίαση
+    function drawGear(x, y, radius, teeth, color, rotationAngle) {
+      ctx.save();
+      ctx.translate(x, y);
+      ctx.rotate(rotationAngle);
+      ctx.beginPath();
+      ctx.fillStyle = color;
+      ctx.strokeStyle = '#8c5a2b';
+      ctx.lineWidth = 1.5;
 
-/* STORAGE */
-function save(){localStorage.setItem(STORAGE,JSON.stringify(data));}
+      const numTeeth = teeth;
+      const innerRadius = radius - 6;
 
-/* RENDER */
-function render(){
-  cards.innerHTML="";
-  data.forEach(m=>{
-    const c=document.createElement("div");
-    c.className="card";
-    c.innerHTML=`
-      <b>${m.home} vs ${m.away}</b><br>
-      <small>${m.league}</small>
-      <img src="${m.image}" class="bet-image ${m.locked==="locked"?"blurred":""}">
-      ${m.locked==="locked"
-        ? `<div class="vip-lock">🔒 Ξεκλείδωμα Πρόβλεψης — 24€</div>`
-        : ""}
-    `;
-    if(m.locked==="locked"){
-      c.querySelector(".vip-lock").onclick=()=>{
-        location.href=
-        "https://www.paypal.com/donate/?business=phonegenius88@gmail.com&amount=24&currency_code=EUR&return="+
-        encodeURIComponent(location.href+"?unlocked=1&id="+m.id);
-      };
+      for (let i = 0; i < numTeeth; i++) {
+        const a1 = (i / numTeeth) * Math.PI * 2;
+        const a2 = ((i + 0.3) / numTeeth) * Math.PI * 2;
+        const a3 = ((i + 0.5) / numTeeth) * Math.PI * 2;
+        const a4 = ((i + 0.8) / numTeeth) * Math.PI * 2;
+
+        if (i === 0) {
+          ctx.moveTo(Math.cos(a1) * innerRadius, Math.sin(a1) * innerRadius);
+        } else {
+          ctx.lineTo(Math.cos(a1) * innerRadius, Math.sin(a1) * innerRadius);
+        }
+        ctx.lineTo(Math.cos(a2) * radius, Math.sin(a2) * radius);
+        ctx.lineTo(Math.cos(a3) * radius, Math.sin(a3) * radius);
+        ctx.lineTo(Math.cos(a4) * innerRadius, Math.sin(a4) * innerRadius);
+      }
+
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+
+      // Κεντρική τρύπα γραναζιού
+      ctx.beginPath();
+      ctx.arc(0, 0, radius * 0.2, 0, Math.PI * 2);
+      ctx.fillStyle = '#0a0d12';
+      ctx.fill();
+      ctx.stroke();
+
+      ctx.restore();
     }
-    cards.appendChild(c);
-  });
-}
 
-/* SAVE NEW */
-document.getElementById("save").onclick=()=>{
-  const img=imageInput.files[0];
-  if(!img){alert("Ανέβασε φωτογραφία");return;}
+    // Σχεδίαση όλου του μηχανισμού
+    function render() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      const cx = canvas.width / 2;
+      const cy = canvas.height / 2;
 
-  const r=new FileReader();
-  r.onload=()=>{
-    const rec={
-      id:Date.now(),
-      home:home.value,
-      away:away.value,
-      league:league.value,
-      image:r.result,
-      locked:lockedSel.value
-    };
-    data.push(rec);
-    save();
-    render();
-    modal.style.display="none";
+      const rad = (angle * Math.PI) / 180;
 
-    /* SEND TO TELEGRAM */
-    fetch(`https://api.telegram.org/bot${TG_BOT}/sendPhoto`,{
-      method:"POST",
-      headers:{ "Content-Type":"application/json" },
-      body:JSON.stringify({
-        chat_id:TG_CHAT,
-        photo:rec.image,
-        caption:`${rec.home} vs ${rec.away}\n${rec.league}`
-      })
+      // Κεντρικό Μεγάλο Γρανάζι (Ηλιακό - B1)
+      drawGear(cx, cy, 110, 64, '#cd7f32', rad * 0.5);
+
+      // Εσωτερικό Γρανάζι Σελήνης
+      drawGear(cx, cy, 75, 38, '#d4af37', -rad * 1.2);
+
+      // Μικρά Περιφερειακά Γρανάζια (Διαφορικός Μηχανισμός)
+      drawGear(cx - 50, cy - 50, 40, 20, '#b87333', rad * 2.5);
+      drawGear(cx + 55, cy - 40, 35, 18, '#d4af37', -rad * 3.0);
+      drawGear(cx + 40, cy + 60, 45, 24, '#b87333', rad * 1.8);
+
+      // Κεντρικός Άξονας
+      ctx.beginPath();
+      ctx.arc(cx, cy, 12, 0, Math.PI * 2);
+      ctx.fillStyle = '#e2e8f0';
+      ctx.fill();
+
+      updateCalculations();
+    }
+
+    // Υπολογισμοί Αστρονομικών Ενδείξεων
+    function updateCalculations() {
+      // Ήλιος (360 μοίρες)
+      const sunDeg = Math.floor(angle % 360);
+      const zodiacIdx = Math.floor(sunDeg / 30);
+      sunVal.textContent = `${sunDeg}° (${zodiacSigns[zodiacIdx]})`;
+
+      // Σελήνη (Κινείται ~13.3 φορές γρηγορότερα)
+      const moonDeg = (angle * 13.37) % 360;
+      if (moonDeg < 45 || moonDeg > 315) moonVal.textContent = "🌑 Νέα Σελήνη";
+      else if (moonDeg >= 45 && moonDeg < 135) moonVal.textContent = "🌓 Πρώτο Τέταρτο";
+      else if (moonDeg >= 135 && moonDeg < 225) moonVal.textContent = "🌕 Πανσέληνος";
+      else moonVal.textContent = "🌗 Τελευταίο Τέταρτο";
+
+      // Μετωνικός Κύκλος (19 έτη)
+      const metonicYear = Math.floor((angle / 360) % 19) + 1;
+      metonicVal.textContent = `Έτος ${metonicYear} / 19`;
+
+      // Σάρος (Πρόβλεψη Εκλείψεων)
+      const eclipseCheck = Math.floor(moonDeg);
+      if (eclipseCheck >= 175 && eclipseCheck <= 185) {
+        sarosVal.textContent = "☀️ Ηλιακή Έκλειψη!";
+        sarosVal.style.color = "#ef4444";
+      } else if (eclipseCheck >= 355 || eclipseCheck <= 5) {
+        sarosVal.textContent = "🌕 Σεληνιακή Έκλειψη!";
+        sarosVal.style.color = "#f97316";
+      } else {
+        sarosVal.textContent = "Καμία Έκλειψη";
+        sarosVal.style.color = "var(--accent-gold)";
+      }
+    }
+
+    // Handlers
+    crankSlider.addEventListener('input', (e) => {
+      angle = parseFloat(e.target.value);
+      render();
     });
-  };
-  r.readAsDataURL(img);
-};
 
-/* ADMIN LOGIN */
-adminTrigger.onclick=async()=>{
-  const pass=prompt("Admin κωδικός:");
-  if(!pass)return;
-  const buf=await crypto.subtle.digest("SHA-256",new TextEncoder().encode(pass));
-  const hash=[...new Uint8Array(buf)].map(b=>b.toString(16).padStart(2,"0")).join("");
-  if(hash===ADMIN_HASH){
-    isAdmin=true;
-    localStorage.setItem("si_admin","1");
-    addBtn.style.display="inline-block";
-    alert("Admin ενεργό");
-  } else {
-    alert("Λάθος κωδικός");
-  }
-};
+    function loop() {
+      if (isRunning) {
+        angle = (angle + 1.5) % 360;
+        crankSlider.value = angle;
+        render();
+        animId = requestAnimationFrame(loop);
+      }
+    }
 
-/* UI */
-addBtn.onclick=()=>modal.style.display="flex";
-modal.onclick=e=>{if(e.target===modal)modal.style.display="none"};
+    toggleBtn.addEventListener('click', () => {
+      isRunning = !isRunning;
+      if (isRunning) {
+        toggleBtn.textContent = '⏸ Παύση';
+        loop();
+      } else {
+        toggleBtn.textContent = '▶ Αυτόματη Περιστροφή';
+        cancelAnimationFrame(animId);
+      }
+    });
 
-/* UNLOCK AFTER PAYPAL */
-(function(){
-  const p=new URLSearchParams(location.search);
-  if(p.get("unlocked")==="1"){
-    const rec=data.find(x=>String(x.id)===p.get("id"));
-    if(rec) rec.locked="free";
-    save();
-    history.replaceState({},'',location.pathname);
-  }
-})();
+    resetBtn.addEventListener('click', () => {
+      isRunning = false;
+      cancelAnimationFrame(animId);
+      toggleBtn.textContent = '▶ Αυτόματη Περιστροφή';
+      angle = 0;
+      crankSlider.value = 0;
+      render();
+    });
 
-render();
-if(isAdmin) addBtn.style.display="inline-block";
-</script>
-
+    // Initial render
+    render();
+  </script>
 </body>
 </html>
